@@ -1,10 +1,15 @@
 #!/bin/bash
 set -e
 
+# Load local env
+ENV_FILE="$HOME/.env/awsjdbcdriver.env"
+if [ ! -f "$ENV_FILE" ]; then
+  echo "ERROR: $ENV_FILE not found. Copy .env.example and fill in values."
+  exit 1
+fi
+source "$ENV_FILE"
+
 # Config
-EC2_HOST="<ec2-public-dns>"
-EC2_USER="ec2-user"
-PEM_KEY="<path-to-pem-key>"
 APP_DIR="/root/awsjdbcdriver-lab"
 JAR_NAME="awsjdbcdriver-springframework-lab-0.0.1-SNAPSHOT.jar"
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -16,20 +21,14 @@ cd "$PROJECT_DIR"
 echo "=== 2. Creating remote directory ==="
 ssh -i "$PEM_KEY" "$EC2_USER@$EC2_HOST" "sudo mkdir -p $APP_DIR && sudo chown $EC2_USER:$EC2_USER $APP_DIR"
 
-echo "=== 3. Uploading jar ==="
+echo "=== 3. Uploading files ==="
 scp -i "$PEM_KEY" "build/libs/$JAR_NAME" "$EC2_USER@$EC2_HOST:/tmp/$JAR_NAME"
-ssh -i "$PEM_KEY" "$EC2_USER@$EC2_HOST" "sudo mv /tmp/$JAR_NAME $APP_DIR/"
+scp -i "$PEM_KEY" "$ENV_FILE" "$EC2_USER@$EC2_HOST:/tmp/env.sh"
+scp -i "$PEM_KEY" "$PROJECT_DIR/start.sh" "$EC2_USER@$EC2_HOST:/tmp/start.sh"
+ssh -i "$PEM_KEY" "$EC2_USER@$EC2_HOST" "sudo mv /tmp/$JAR_NAME /tmp/env.sh /tmp/start.sh $APP_DIR/ && sudo chmod +x $APP_DIR/start.sh"
 
 echo "=== 4. Restarting application ==="
-ssh -i "$PEM_KEY" "$EC2_USER@$EC2_HOST" << EOF
-  # Stop existing process
-  sudo pkill -f "$JAR_NAME" || true
-  sleep 3
-
-  # Start application
-  sudo bash -c "nohup java -jar $APP_DIR/$JAR_NAME > $APP_DIR/app.log 2>&1 &"
-  echo "Started."
-EOF
+ssh -i "$PEM_KEY" "$EC2_USER@$EC2_HOST" "sudo $APP_DIR/start.sh"
 
 echo "=== Deploy complete ==="
 echo "App: http://$EC2_HOST:8080"
