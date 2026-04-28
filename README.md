@@ -121,17 +121,45 @@ datasource:
 - EC2 인스턴스 (배포 시, 보안 그룹 8080 포트 오픈)
 
 ### 설정
-1. `application.yaml`에서 플레이스홀더를 본인 환경으로 변경
-2. EC2 배포 시 `deploy.sh`의 EC2 호스트, PEM 키 경로 변경
+
+1. 환경변수 파일 생성
+```bash
+mkdir -p ~/.env
+cp .env.example ~/.env/awsjdbcdriver.env
+```
+
+2. `~/.env/awsjdbcdriver.env`에서 본인 환경에 맞게 값 수정
+```bash
+# EC2
+export EC2_HOST="<ec2-public-dns>"
+export EC2_USER="ec2-user"
+export PEM_KEY="<path-to-pem-key>"
+
+# Database
+export DB_WRITER_ENDPOINT="<writer-cluster-endpoint>"
+export DB_READER_ENDPOINT="<reader-cluster-endpoint>"
+export DB_NAME="<database>"
+export DB_USERNAME="<username>"
+export DB_PASSWORD="<password>"
+```
+
+> 이 파일은 `.gitignore`에 포함되어 GitHub에 올라가지 않습니다.
 
 ### 실행
 ```bash
 # 로컬 실행
+source ~/.env/awsjdbcdriver.env
 ./gradlew bootRun
 
-# EC2 배포
+# EC2 배포 (빌드 + 업로드 + 재시작 자동화)
 bash deploy.sh
 ```
+
+`deploy.sh`는 다음을 자동으로 수행합니다:
+1. `~/.env/awsjdbcdriver.env` 로드
+2. Gradle 빌드
+3. jar, env, start.sh를 EC2에 업로드
+4. EC2에서 환경변수 로드 후 앱 시작
 
 ### 접속
 - 메인 페이지: `http://<host>:8080`

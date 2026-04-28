@@ -13,7 +13,7 @@ datasource:
     maximum-pool-size: 500
     data-source-properties:
       wrapperProfileName: SF_F0
-      readerHostSelectorStrategy: leastConnections
+      readerHostSelectorStrategy: roundRobin
   reader:
     jdbc-url: jdbc:aws-wrapper:postgresql://${DB_READER_ENDPOINT}:5432/${DB_NAME}
     username: ${DB_USERNAME}
@@ -24,7 +24,7 @@ datasource:
     maximum-pool-size: 500
     data-source-properties:
       wrapperProfileName: SF_F0
-      readerHostSelectorStrategy: leastConnections
+      readerHostSelectorStrategy: roundRobin
 
 management:
   endpoints:
