@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Query Console</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1 { color: #232f3e; }
+        textarea { width: 100%; height: 120px; font-family: monospace; font-size: 14px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .buttons { margin: 10px 0; }
+        button { padding: 10px 20px; margin-right: 8px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; }
+        .read-btn { background: #2196F3; color: white; }
+        .write-btn { background: #ff9900; color: white; }
+        .read-btn:hover { background: #1976D2; }
+        .write-btn:hover { background: #ec7211; }
+        #result { background: #f5f5f5; padding: 15px; border-radius: 8px; white-space: pre-wrap; margin-top: 15px; min-height: 100px; font-family: monospace; font-size: 13px; overflow-x: auto; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px; }
+        .reader { background: #e3f2fd; color: #1565c0; }
+        .writer { background: #fff3e0; color: #e65100; }
+    </style>
+</head>
+<body>
+<h1>Query Console</h1>
+<p>Read queries → <span class="tag reader">Reader endpoint</span> | Write queries → <span class="tag writer">Writer endpoint</span></p>
+
+<textarea id="sql" placeholder="SELECT * FROM users;">SELECT inet_server_addr(), inet_server_port();</textarea>
+
+<div class="buttons">
+    <button class="read-btn" onclick="run('read')">Run as READ (→ Reader)</button>
+    <button class="write-btn" onclick="run('write')">Run as WRITE (→ Writer)</button>
+</div>
+
+<h3>Result</h3>
+<div id="result">Ready.</div>
+
+<script>
+    async function run(mode) {
+        const sql = document.getElementById('sql').value;
+        const result = document.getElementById('result');
+        result.textContent = 'Executing...';
+        try {
+            const res = await fetch(`/api/query/${mode}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({sql})
+            });
+            const data = await res.json();
+            result.textContent = `[${mode.toUpperCase()}] ${new Date().toLocaleTimeString()}\n\n${JSON.stringify(data, null, 2)}`;
+        } catch (e) {
+            result.textContent = 'Error: ' + e.message;
+        }
+    }
+</script>
+</body>
+</html>

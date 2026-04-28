@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: awsjdbcdriver-springframework-lab
+
+datasource:
+  writer:
+    jdbc-url: jdbc:aws-wrapper:postgresql://<writer-cluster-endpoint>:5432/<database>
+    username: <username>
+    password: <password>
+    driver-class-name: software.amazon.jdbc.Driver
+    pool-name: writer-pool
+    minimum-idle: 100
+    maximum-pool-size: 500
+    data-source-properties:
+      wrapperProfileName: SF_F0
+      readerHostSelectorStrategy: leastConnections
+  reader:
+    jdbc-url: jdbc:aws-wrapper:postgresql://<reader-cluster-endpoint>:5432/<database>
+    username: <username>
+    password: <password>
+    driver-class-name: software.amazon.jdbc.Driver
+    pool-name: reader-pool
+    minimum-idle: 100
+    maximum-pool-size: 500
+    data-source-properties:
+      wrapperProfileName: SF_F0
+      readerHostSelectorStrategy: leastConnections
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+  endpoint:
+    health:
+      show-details: always
